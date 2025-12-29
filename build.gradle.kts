@@ -9,7 +9,7 @@ plugins {
 }
 
 group = "com.github.MuhammadAounAnwar"
-version = "1.0.1"
+version = "1.0.2"
 description = "Logging auto-configuration library for Kotlin Spring Boot"
 
 java {
