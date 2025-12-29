@@ -5,16 +5,20 @@ plugins {
     id("org.springframework.boot") version "3.2.5"
     id("io.spring.dependency-management") version "1.1.7"
     `java-library`
+    `maven-publish`
 }
 
-group = "com.ono"
-version = "0.0.1"
+group = "com.github.MuhammadAounAnwar"
+version = "1.0.0"
 description = "Logging auto-configuration library for Kotlin Spring Boot"
 
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(21)
     }
+
+    withSourcesJar()
+    withJavadocJar()
 }
 
 repositories {
@@ -83,4 +87,20 @@ tasks.bootJar {
 
 tasks.jar {
     enabled = true
+}
+
+
+/* ============================
+ * Maven Publication (JitPack)
+ * ============================ */
+publishing {
+    publications {
+        create<MavenPublication>("mavenJava") {
+            from(components["java"])
+
+            groupId = project.group.toString()
+            artifactId = "ono-logging"
+            version = project.version.toString()
+        }
+    }
 }
