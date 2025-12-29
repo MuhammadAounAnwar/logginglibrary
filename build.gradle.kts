@@ -97,10 +97,6 @@ publishing {
     publications {
         create<MavenPublication>("mavenJava") {
             from(components["java"])
-
-            groupId = project.group.toString()
-            artifactId = "ono-logging"
-            version = project.version.toString()
         }
     }
 }
