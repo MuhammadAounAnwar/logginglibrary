@@ -1,5 +1,8 @@
 package com.ono.logginglibrary.exception
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.MethodArgumentNotValidException
@@ -7,7 +10,15 @@ import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.context.request.WebRequest
 
-@RestControllerAdvice // Combines @ControllerAdvice and @ResponseBody
+@RestControllerAdvice
+@ConditionalOnClass(RestControllerAdvice::class)
+@ConditionalOnMissingBean(GlobalExceptionHandler::class)
+@ConditionalOnProperty(
+    prefix = "ono.logging.exceptions",
+    name = ["enabled"],
+    havingValue = "true",
+    matchIfMissing = false // IMPORTANT
+)
 class GlobalExceptionHandler {
 
     // 1. Handle Token Expired

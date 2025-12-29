@@ -1,7 +1,5 @@
 package com.ono.logginglibrary.logging
 
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
 import org.springframework.stereotype.Component
 import org.zalando.logbook.HttpRequest
 import org.zalando.logbook.Logbook
@@ -18,11 +16,9 @@ import org.zalando.logbook.core.attributes.CompositeAttributeExtractor
 import org.zalando.logbook.json.JsonBodyFilters.replaceJsonStringProperty
 import org.zalando.logbook.json.JsonHttpLogFormatter
 
-@Configuration
 class LogsConfig(
     private val originExtractor: OriginExtractor // Inject the component directly
 ) {
-    @Bean
     fun provideLogBook(): Logbook {
         return Logbook.builder()
             .condition(

@@ -1,0 +1,16 @@
+{
+  "properties": [
+    {
+      "name": "ono.logging.exceptions.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": false,
+      "description": "Enable or disable global exception handling provided by ono-logging starter."
+    },
+    {
+      "name": "ono.logging.performance.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true,
+      "description": "Enable or disable performance logging aspect for @Service methods."
+    }
+  ]
+}
