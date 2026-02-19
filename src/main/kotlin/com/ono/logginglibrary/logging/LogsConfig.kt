@@ -35,19 +35,7 @@ class LogsConfig(
             .queryFilter(replaceQuery("password", "<secret>"))
             // Unified Header Filtering
             .headerFilter(authorization())
-            .headerFilter(
-                eachHeader { name, value ->
-                    // Check if name matches AND value matches our criteria
-                    if (name.equals("X-Secret", ignoreCase = true) &&
-                        (value == "1" || value.equals("true", ignoreCase = true))
-                    ) {
-                        "<secret>"
-                    } else {
-                        // If it doesn't match, return the original value untouched
-                        value
-                    }
-                }
-            )
+            .headerFilter(eachHeader(::maskSensitiveHeaders))
             .bodyFilter(
                 replaceJsonStringProperty(
                     setOf("password", "client_secret", "token", "ssn"),
@@ -62,7 +50,19 @@ class LogsConfig(
             )
             .build()
     }
+
+    private fun maskSensitiveHeaders(name: String, value: String): String =
+        when {
+            name.equals("X-Secret", ignoreCase = true) &&
+                    (value == "1" || value.equals("true", ignoreCase = true)) ->
+                "<secret>"
+
+            else -> value
+        }
+
+
 }
+
 
 @Component
 class OriginExtractor : AttributeExtractor {

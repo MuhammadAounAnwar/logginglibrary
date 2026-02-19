@@ -21,7 +21,12 @@ class PerformanceLoggingAspect {
 
     // This Pointcut targets any class annotated with @Service
     // inside any sub-package of 'com.ono'
-//    @Around("@annotation(com.ono.common.logging.LogExecutionTime)")  --- if want to log specific method
+    /*@Around(
+        "within(@org.springframework.stereotype.Service *) && " +
+                "within(com.ono.auth..*)"
+    )*/
+
+    //    @Around("@annotation(com.ono.common.logging.LogExecutionTime)")  --- if want to log specific method
     @Around("within(@org.springframework.stereotype.Service *)")
     fun logExecutionTime(joinPoint: ProceedingJoinPoint): Any? {
         val start = System.currentTimeMillis()
