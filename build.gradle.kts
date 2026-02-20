@@ -1,9 +1,7 @@
 plugins {
     kotlin("jvm") version "1.9.24"
     kotlin("plugin.spring") version "1.9.24"
-
     id("io.spring.dependency-management") version "1.1.7"
-
     `java-library`
     `maven-publish`
 }
@@ -14,11 +12,9 @@ description = "Logging auto-configuration library for Kotlin Spring Boot"
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+        languageVersion.set(JavaLanguageVersion.of(21))
     }
-
     withSourcesJar()
-    withJavadocJar()
 }
 
 repositories {
@@ -31,75 +27,63 @@ dependencyManagement {
     }
 }
 
-
 dependencies {
 
-    /* ============================
-     * Spring Boot (compile-time)
-     * ============================ */
-    compileOnly("org.springframework.boot:spring-boot")
+    // ===== Spring Boot AutoConfiguration =====
     compileOnly("org.springframework.boot:spring-boot-autoconfigure")
+    annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
+    annotationProcessor("org.springframework.boot:spring-boot-autoconfigure-processor")
 
-    /* ============================
-     * Spring Framework (public API)
-     * ============================ */
-    api("org.springframework:spring-context")
-    api("org.springframework:spring-aop")
+    // ===== Spring Core =====
+    compileOnly("org.springframework:spring-context")
 
-    /* ============================
-     * Logging (public contract)
-     * ============================ */
-    api("org.zalando:logbook-spring-boot-starter:3.9.0")
-    api("org.zalando:logbook-json:3.9.0")
+    // ===== WebFlux =====
+    compileOnly("org.springframework.boot:spring-boot-starter-webflux")
 
-    /* ============================
-     * Optional integrations
-     * ============================ */
-    compileOnly("org.springframework.boot:spring-boot-starter-web")
-    compileOnly("org.springframework.boot:spring-boot-starter-data-jpa")
+    // ===== R2DBC =====
+    compileOnly("org.springframework.boot:spring-boot-starter-data-r2dbc")
+    compileOnly("org.springframework.data:spring-data-relational")
 
-    /* ============================
-     * Internal utilities
-     * ============================ */
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
-    implementation("org.jetbrains.kotlin:kotlin-reflect")
+    // ===== AOP =====
+    compileOnly("org.springframework.boot:spring-boot-starter-aop")
+    compileOnly("org.aspectj:aspectjweaver")
 
-    /* ============================
-     * Testing
-     * ============================ */
+    // ===== Micrometer =====
+    compileOnly("io.micrometer:micrometer-core")
+
+    // ===== Logbook =====
+    val logbookVersion = "3.9.0"
+    api("org.zalando:logbook-core:$logbookVersion")
+    api("org.zalando:logbook-json:$logbookVersion")
+    api("org.zalando:logbook-spring-webflux:$logbookVersion")
+
+    // ===== Logging =====
+    api("org.slf4j:slf4j-api:2.0.12")
+
+    // ===== Kotlin =====
+    implementation(kotlin("stdlib"))
+
+    // ===== Testing =====
     testImplementation("org.springframework.boot:spring-boot-starter-test")
-    testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
+    testImplementation("org.springframework.boot:spring-boot-starter-webflux")
+    testImplementation(kotlin("test"))
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-}
-
-kotlin {
-    compilerOptions {
-        freeCompilerArgs.addAll(
-            "-Xjsr305=strict",
-            "-Xannotation-default-target=param-property"
-        )
-    }
 }
 
 tasks.withType<Test> {
     useJUnitPlatform()
 }
 
-/* ============================
- * Library JAR (NOT executable)
- * ============================ */
-tasks.jar {
-    enabled = true
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+    kotlinOptions {
+        freeCompilerArgs = freeCompilerArgs + "-java-parameters"
+    }
 }
 
-
-/* ============================
- * Maven Publication (JitPack)
- * ============================ */
 publishing {
     publications {
         create<MavenPublication>("mavenJava") {
-            artifactId = "logginglibrary"
+            artifactId = "logginglibrary-spring-boot-starter"
             from(components["java"])
         }
     }

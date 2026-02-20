@@ -1,1 +1,3 @@
-com.ono.logginglibrary.config.CommonAutoConfiguration
+com.ono.logginglibrary.autoconfigure.ObservabilityAutoConfiguration
+com.ono.logginglibrary.autoconfigure.exception.ExceptionAutoConfiguration
+com.ono.logginglibrary.autoconfigure.http.HttpLoggingAutoConfiguration

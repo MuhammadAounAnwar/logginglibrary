@@ -1,16 +1,82 @@
 {
   "properties": [
     {
-      "name": "ono.logging.exceptions.enabled",
-      "type": "java.lang.Boolean",
-      "defaultValue": false,
-      "description": "Enable or disable global exception handling provided by ono-logging starter."
-    },
-    {
-      "name": "ono.logging.performance.enabled",
+      "name": "ono.observability.enabled",
       "type": "java.lang.Boolean",
       "defaultValue": true,
-      "description": "Enable or disable performance logging aspect for @Service methods."
+      "description": "Master switch to enable or disable the observability auto-configuration."
+    },
+    {
+      "name": "ono.observability.logging.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true,
+      "description": "Enable or disable correlation ID propagation via the web filter."
+    },
+    {
+      "name": "ono.observability.logging.correlationHeader",
+      "type": "java.lang.String",
+      "defaultValue": "X-Correlation-Id",
+      "description": "HTTP header name used to propagate the correlation ID."
+    },
+    {
+      "name": "ono.observability.metrics.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true,
+      "description": "Enable or disable Micrometer common tag configuration."
+    },
+    {
+      "name": "ono.observability.metrics.serviceName",
+      "type": "java.lang.String",
+      "defaultValue": "unknown-service",
+      "description": "Service name applied as a common Micrometer tag."
+    },
+    {
+      "name": "ono.observability.tracing.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true,
+      "description": "Enable or disable distributed tracing configuration."
+    },
+    {
+      "name": "ono.observability.aop.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true,
+      "description": "Enable or disable the AOP aspect for @LogExecution and @TimedExecution annotations."
+    },
+    {
+      "name": "ono.observability.aop.slowThresholdMs",
+      "type": "java.lang.Long",
+      "defaultValue": 500,
+      "description": "Threshold in milliseconds above which a method execution is considered slow."
+    },
+    {
+      "name": "ono.observability.exceptions.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true,
+      "description": "Enable or disable the global exception handler provided by the observability starter."
+    },
+    {
+      "name": "ono.observability.http.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true,
+      "description": "Enable or disable HTTP request/response logging via Logbook."
+    },
+    {
+      "name": "ono.observability.http.excludePaths",
+      "type": "java.util.List<java.lang.String>",
+      "defaultValue": ["/actuator/**", "/health", "/health/**"],
+      "description": "URL path patterns excluded from HTTP logging."
+    },
+    {
+      "name": "ono.observability.http.maskHeaders",
+      "type": "java.util.List<java.lang.String>",
+      "defaultValue": ["Authorization", "X-API-Key", "Cookie", "Set-Cookie"],
+      "description": "HTTP header names whose values are masked in logs."
+    },
+    {
+      "name": "ono.observability.http.maskBodyFields",
+      "type": "java.util.List<java.lang.String>",
+      "defaultValue": ["password", "token", "secret", "apiKey", "accessToken", "refreshToken"],
+      "description": "JSON body field names whose values are masked in logs."
     }
   ]
 }

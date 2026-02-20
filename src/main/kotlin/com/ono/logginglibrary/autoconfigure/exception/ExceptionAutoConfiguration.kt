@@ -1,0 +1,24 @@
+package com.ono.logginglibrary.autoconfigure.exception
+
+import org.springframework.boot.autoconfigure.AutoConfiguration
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
+import org.springframework.context.annotation.Bean
+
+@AutoConfiguration
+@ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.REACTIVE)
+@ConditionalOnProperty(
+    prefix = "ono.observability.exceptions",
+    name = ["enabled"],
+    havingValue = "true",
+    matchIfMissing = true
+)
+class ExceptionAutoConfiguration {
+
+    @Bean
+    @ConditionalOnMissingBean
+    fun globalExceptionHandler(): DefaultGlobalExceptionHandler {
+        return DefaultGlobalExceptionHandler()
+    }
+}
