@@ -22,6 +22,7 @@ class ObservabilityAutoConfigurationTest {
             assertThat(props.metrics.serviceName).isEqualTo("unknown-service")
             assertThat(props.aop.enabled).isTrue()
             assertThat(props.aop.slowThresholdMs).isEqualTo(500L)
+            assertThat(props.exceptions.enabled).isTrue()
         }
     }
 

@@ -31,8 +31,6 @@ dependencies {
 
     // ===== Spring Boot AutoConfiguration =====
     compileOnly("org.springframework.boot:spring-boot-autoconfigure")
-    annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
-    annotationProcessor("org.springframework.boot:spring-boot-autoconfigure-processor")
 
     // ===== Spring Core =====
     compileOnly("org.springframework:spring-context")
@@ -42,7 +40,6 @@ dependencies {
 
     // ===== R2DBC =====
     compileOnly("org.springframework.boot:spring-boot-starter-data-r2dbc")
-    compileOnly("org.springframework.data:spring-data-relational")
 
     // ===== AOP =====
     compileOnly("org.springframework.boot:spring-boot-starter-aop")
@@ -59,9 +56,6 @@ dependencies {
 
     // ===== Logging =====
     api("org.slf4j:slf4j-api:2.0.12")
-
-    // ===== Kotlin =====
-    implementation(kotlin("stdlib"))
 
     // ===== Testing =====
     testImplementation("org.springframework.boot:spring-boot-starter-test")

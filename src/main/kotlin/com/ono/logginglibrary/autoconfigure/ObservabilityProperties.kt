@@ -9,8 +9,8 @@ data class ObservabilityProperties(
 
     var logging: Logging = Logging(),
     var metrics: Metrics = Metrics(),
-    var tracing: Tracing = Tracing(),
-    var aop: Aop = Aop()
+    var aop: Aop = Aop(),
+    var exceptions: Exceptions = Exceptions()
 
 ) {
 
@@ -24,12 +24,12 @@ data class ObservabilityProperties(
         var serviceName: String = "unknown-service"
     )
 
-    data class Tracing(
-        var enabled: Boolean = true
-    )
-
     data class Aop(
         var enabled: Boolean = true,
         var slowThresholdMs: Long = 500
+    )
+
+    data class Exceptions(
+        var enabled: Boolean = true
     )
 }

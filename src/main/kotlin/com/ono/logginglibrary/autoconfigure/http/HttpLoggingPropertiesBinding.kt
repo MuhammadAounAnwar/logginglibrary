@@ -4,7 +4,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 
 @ConfigurationProperties(prefix = "ono.observability.http")
 data class HttpLoggingPropertiesBinding(
-    val enabled: Boolean = true,
     val excludePaths: List<String> = listOf(
         "/actuator/**",
         "/health",

@@ -1,5 +1,6 @@
 package com.ono.logginglibrary.autoconfigure.exception
 
+import com.ono.logginglibrary.core.ObservabilityConstants
 import com.ono.logginglibrary.core.exception.ErrorResponse
 import com.ono.logginglibrary.core.exception.OnoBusinessException
 import org.slf4j.LoggerFactory
@@ -12,7 +13,9 @@ import reactor.core.publisher.Mono
 import java.time.Instant
 
 @RestControllerAdvice
-class DefaultGlobalExceptionHandler {
+class DefaultGlobalExceptionHandler(
+    private val correlationHeader: String = ObservabilityConstants.DEFAULT_CORRELATION_HEADER
+) {
 
     private val log = LoggerFactory.getLogger(DefaultGlobalExceptionHandler::class.java)
 
@@ -71,7 +74,7 @@ class DefaultGlobalExceptionHandler {
     ): Mono<ResponseEntity<ErrorResponse>> {
 
         val path = exchange.request.uri.path
-        val correlationId = exchange.request.headers.getFirst("X-Correlation-Id")
+        val correlationId = exchange.request.headers.getFirst(correlationHeader)
 
         val body = ErrorResponse(
             status = status.value(),

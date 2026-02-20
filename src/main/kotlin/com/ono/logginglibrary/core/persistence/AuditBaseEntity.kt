@@ -50,6 +50,7 @@ abstract class AuditBaseEntity : Serializable {
 
     @Column("is_deleted")
     var isDeleted: Boolean = false
+        private set
 
     fun markDeleted() {
         this.isDeleted = true

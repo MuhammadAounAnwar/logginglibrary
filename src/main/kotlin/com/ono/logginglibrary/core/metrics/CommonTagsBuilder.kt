@@ -1,5 +1,8 @@
 package com.ono.logginglibrary.core.metrics
 
+import io.micrometer.core.instrument.Tag
+import io.micrometer.core.instrument.Tags
+
 class CommonTagsBuilder {
 
     private val tags = mutableMapOf<String, String>()
@@ -24,5 +27,5 @@ class CommonTagsBuilder {
         tags[key] = value
     }
 
-    fun build(): Map<String, String> = tags.toMap()
+    fun build(): Tags = Tags.of(tags.entries.map { Tag.of(it.key, it.value) })
 }

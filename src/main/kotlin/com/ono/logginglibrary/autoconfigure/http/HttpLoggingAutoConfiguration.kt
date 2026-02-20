@@ -62,7 +62,6 @@ class HttpLoggingAutoConfiguration(
             .condition(Conditions.exclude(*excludeConditions.toTypedArray()))
             .attributeExtractor(CompositeAttributeExtractor(listOf(originExtractor)))
             .queryFilter(QueryFilters.accessToken())
-            .headerFilter(HeaderFilters.authorization())
             .headerFilter(
                 HeaderFilters.eachHeader { name, value ->
                     if (properties.maskHeaders.any { it.equals(name, ignoreCase = true) }) {

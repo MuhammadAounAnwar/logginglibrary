@@ -3,7 +3,6 @@ package com.ono.logginglibrary.autoconfigure.web
 import com.ono.logginglibrary.autoconfigure.ObservabilityProperties
 import com.ono.logginglibrary.core.mdc.CorrelationIdGenerator
 import com.ono.logginglibrary.core.mdc.MdcKeys
-import com.ono.logginglibrary.core.mdc.MdcUtils
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
@@ -39,15 +38,12 @@ class CorrelationWebFilterConfig {
 
             exchange.response.headers.add(headerName, correlationId)
 
+            // Propagate via Reactor Context, which is the correct mechanism for reactive pipelines.
+            // For MDC propagation (thread-local), configure Hooks.enableAutomaticContextPropagation()
+            // with micrometer-context-propagation in your application.
             chain.filter(exchange)
                 .contextWrite { ctx ->
                     ctx.put(MdcKeys.CORRELATION_ID, correlationId)
-                }
-                .doOnEach {
-                    MdcUtils.put(MdcKeys.CORRELATION_ID, correlationId)
-                }
-                .doFinally {
-                    MdcUtils.remove(MdcKeys.CORRELATION_ID)
                 }
         }
     }

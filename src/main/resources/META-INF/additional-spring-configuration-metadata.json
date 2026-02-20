@@ -4,7 +4,7 @@
       "name": "ono.observability.enabled",
       "type": "java.lang.Boolean",
       "defaultValue": true,
-      "description": "Master switch to enable or disable the observability auto-configuration."
+      "description": "Master switch to enable or disable all observability auto-configuration."
     },
     {
       "name": "ono.observability.logging.enabled",
@@ -29,12 +29,6 @@
       "type": "java.lang.String",
       "defaultValue": "unknown-service",
       "description": "Service name applied as a common Micrometer tag."
-    },
-    {
-      "name": "ono.observability.tracing.enabled",
-      "type": "java.lang.Boolean",
-      "defaultValue": true,
-      "description": "Enable or disable distributed tracing configuration."
     },
     {
       "name": "ono.observability.aop.enabled",

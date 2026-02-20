@@ -3,9 +3,7 @@ package com.ono.logginglibrary.exception
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.ono.logginglibrary.autoconfigure.exception.DefaultGlobalExceptionHandler
 import com.ono.logginglibrary.core.exception.ErrorResponse
-import com.ono.logginglibrary.core.exception.InvalidCredentialsException
-import com.ono.logginglibrary.core.exception.NoSuchUserException
-import com.ono.logginglibrary.core.exception.PasswordUpdateFailedException
+import com.ono.logginglibrary.core.exception.OnoBusinessException
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
 import org.springframework.http.codec.json.Jackson2JsonDecoder
@@ -17,6 +15,25 @@ import org.springframework.web.bind.annotation.RestController
 import reactor.core.publisher.Mono
 
 class DefaultGlobalExceptionHandlerTest {
+
+    // Test-local exception subclasses — in real apps these live in the app, not the library
+    private class UserNotFoundException(userId: String) : OnoBusinessException(
+        errorCode = "USER_NOT_FOUND",
+        httpStatus = HttpStatus.NOT_FOUND,
+        message = "User not found: $userId"
+    )
+
+    private class UnauthorizedException : OnoBusinessException(
+        errorCode = "INVALID_CREDENTIALS",
+        httpStatus = HttpStatus.UNAUTHORIZED,
+        message = "Invalid email or password"
+    )
+
+    private class BadRequestException(detail: String) : OnoBusinessException(
+        errorCode = "BAD_REQUEST",
+        httpStatus = HttpStatus.BAD_REQUEST,
+        message = detail
+    )
 
     private val webTestClient = WebTestClient
         .bindToController(TestController())
@@ -30,7 +47,7 @@ class DefaultGlobalExceptionHandlerTest {
         .build()
 
     @Test
-    fun `NoSuchUserException returns 404 Not Found`() {
+    fun `UserNotFoundException returns 404 Not Found`() {
         webTestClient.get().uri("/test/users/42")
             .exchange()
             .expectStatus().isNotFound
@@ -42,7 +59,7 @@ class DefaultGlobalExceptionHandlerTest {
     }
 
     @Test
-    fun `InvalidCredentialsException returns 401 Unauthorized`() {
+    fun `UnauthorizedException returns 401 Unauthorized`() {
         webTestClient.get().uri("/test/login")
             .exchange()
             .expectStatus().isUnauthorized
@@ -53,7 +70,7 @@ class DefaultGlobalExceptionHandlerTest {
     }
 
     @Test
-    fun `PasswordUpdateFailedException returns 400 Bad Request`() {
+    fun `BadRequestException returns 400 Bad Request`() {
         webTestClient.get().uri("/test/password")
             .exchange()
             .expectStatus().isBadRequest
@@ -87,19 +104,19 @@ class DefaultGlobalExceptionHandlerTest {
     }
 
     @RestController
-    class TestController {
+    inner class TestController {
 
         @GetMapping("/test/users/{id}")
-        fun getUser(@PathVariable id: String): Mono<String> =
-            Mono.error(NoSuchUserException(id))
+        fun getUser(@PathVariable("id") id: String): Mono<String> =
+            Mono.error(UserNotFoundException(id))
 
         @GetMapping("/test/login")
         fun login(): Mono<String> =
-            Mono.error(InvalidCredentialsException())
+            Mono.error(UnauthorizedException())
 
         @GetMapping("/test/password")
         fun updatePassword(): Mono<String> =
-            Mono.error(PasswordUpdateFailedException("user@example.com"))
+            Mono.error(BadRequestException("Failed to update password for user: user@example.com"))
 
         @GetMapping("/test/error")
         fun error(): Mono<String> =

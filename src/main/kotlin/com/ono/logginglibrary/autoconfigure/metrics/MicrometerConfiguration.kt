@@ -1,6 +1,5 @@
 package com.ono.logginglibrary.autoconfigure.metrics
 
-
 import com.ono.logginglibrary.autoconfigure.ObservabilityProperties
 import io.micrometer.core.instrument.MeterRegistry
 import jakarta.annotation.PostConstruct
@@ -17,13 +16,13 @@ import org.springframework.context.annotation.Configuration
     matchIfMissing = true
 )
 class MicrometerConfiguration(
-    private val meterRegistry: MeterRegistry,
+    private val meterRegistry: MeterRegistry?,
     private val properties: ObservabilityProperties
 ) {
 
     @PostConstruct
     fun configureCommonTags() {
-        meterRegistry.config().commonTags(
+        meterRegistry?.config()?.commonTags(
             "service", properties.metrics.serviceName
         )
     }
