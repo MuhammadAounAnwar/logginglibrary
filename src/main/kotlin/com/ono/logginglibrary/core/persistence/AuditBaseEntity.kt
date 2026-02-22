@@ -13,7 +13,16 @@ import java.time.LocalDateTime
 /**
  * Base entity for Spring WebFlux (R2DBC).
  * Uses Spring Data Relational instead of JPA.
- * Requires @EnableR2dbcAuditing in configuration.
+ * Requires `@EnableR2dbcAuditing` in configuration.
+ *
+ * ## Soft Delete
+ *
+ * Entities can be soft-deleted via [markDeleted] and restored via [restore].
+ *
+ * **Important**: R2DBC has no equivalent of JPA's `@Where(clause = "is_deleted = false")`.
+ * Every repository query in consuming services **must** manually filter by `is_deleted = false`
+ * or the queries will return soft-deleted records. Consider providing a custom base repository
+ * interface with pre-built soft-delete-aware query methods.
  */
 abstract class AuditBaseEntity : Serializable {
 
@@ -54,5 +63,9 @@ abstract class AuditBaseEntity : Serializable {
 
     fun markDeleted() {
         this.isDeleted = true
+    }
+
+    fun restore() {
+        this.isDeleted = false
     }
 }

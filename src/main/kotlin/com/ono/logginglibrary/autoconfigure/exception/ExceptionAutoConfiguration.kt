@@ -7,9 +7,9 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
 
 @AutoConfiguration
-@ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.REACTIVE)
 @ConditionalOnProperty(
     prefix = "ono.observability.exceptions",
     name = ["enabled"],
@@ -19,9 +19,25 @@ import org.springframework.context.annotation.Bean
 @EnableConfigurationProperties(ObservabilityProperties::class)
 class ExceptionAutoConfiguration {
 
-    @Bean
-    @ConditionalOnMissingBean
-    fun globalExceptionHandler(properties: ObservabilityProperties): DefaultGlobalExceptionHandler {
-        return DefaultGlobalExceptionHandler(properties.logging.correlationHeader)
+    @Configuration
+    @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.REACTIVE)
+    class ReactiveExceptionConfig {
+
+        @Bean
+        @ConditionalOnMissingBean
+        fun globalExceptionHandler(properties: ObservabilityProperties): DefaultGlobalExceptionHandler {
+            return DefaultGlobalExceptionHandler(properties.logging.correlationHeader)
+        }
+    }
+
+    @Configuration
+    @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
+    class ServletExceptionConfig {
+
+        @Bean
+        @ConditionalOnMissingBean
+        fun servletExceptionHandler(properties: ObservabilityProperties): DefaultServletExceptionHandler {
+            return DefaultServletExceptionHandler(properties.logging.correlationHeader)
+        }
     }
 }

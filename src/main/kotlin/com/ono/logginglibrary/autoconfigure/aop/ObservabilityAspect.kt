@@ -11,6 +11,7 @@ import org.aspectj.lang.ProceedingJoinPoint
 import org.aspectj.lang.annotation.Around
 import org.aspectj.lang.annotation.Aspect
 import org.aspectj.lang.reflect.MethodSignature
+import org.slf4j.Logger
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Configuration
@@ -45,16 +46,16 @@ class ObservabilityAspect(
         val start = System.currentTimeMillis()
 
         if (logExecution.logArguments && joinPoint.args.isNotEmpty()) {
-            log.debug("[{}] called with args: {}", methodName, joinPoint.args)
+            logAtLevel(log, logExecution.level, "[{}] called with args: {}", methodName, joinPoint.args)
         }
 
         return try {
             when (val result = joinPoint.proceed()) {
                 is Mono<*> -> result
                     .doOnSuccess { value ->
-                        logCompletion(methodName, System.currentTimeMillis() - start)
+                        logCompletion(methodName, System.currentTimeMillis() - start, logExecution.level)
                         if (logExecution.logResult && value != null) {
-                            log.debug("[{}] result: {}", methodName, value)
+                            logAtLevel(log, logExecution.level, "[{}] result: {}", methodName, value)
                         }
                     }
                     .doOnError { ex ->
@@ -64,20 +65,20 @@ class ObservabilityAspect(
                 is Flux<*> -> result
                     .doOnNext { value ->
                         if (logExecution.logResult) {
-                            log.debug("[{}] emitted: {}", methodName, value)
+                            logAtLevel(log, logExecution.level, "[{}] emitted: {}", methodName, value)
                         }
                     }
                     .doOnComplete {
-                        logCompletion(methodName, System.currentTimeMillis() - start)
+                        logCompletion(methodName, System.currentTimeMillis() - start, logExecution.level)
                     }
                     .doOnError { ex ->
                         log.warn("[{}] failed after {}ms", methodName, System.currentTimeMillis() - start, ex)
                     }
 
                 else -> {
-                    logCompletion(methodName, System.currentTimeMillis() - start)
+                    logCompletion(methodName, System.currentTimeMillis() - start, logExecution.level)
                     if (logExecution.logResult) {
-                        log.debug("[{}] result: {}", methodName, result)
+                        logAtLevel(log, logExecution.level, "[{}] result: {}", methodName, result)
                     }
                     result
                 }
@@ -114,14 +115,14 @@ class ObservabilityAspect(
         }
     }
 
-    private fun logCompletion(methodName: String, elapsedMs: Long) {
+    private fun logCompletion(methodName: String, elapsedMs: Long, level: String) {
         if (elapsedMs > properties.aop.slowThresholdMs) {
             log.warn(
                 "[{}] slow execution: {}ms (threshold: {}ms)",
                 methodName, elapsedMs, properties.aop.slowThresholdMs
             )
         } else {
-            log.debug("[{}] completed in {}ms", methodName, elapsedMs)
+            logAtLevel(log, level, "[{}] completed in {}ms", methodName, elapsedMs)
         }
     }
 
@@ -131,6 +132,17 @@ class ObservabilityAspect(
                 .apply { if (metricDescription.isNotBlank()) description(metricDescription) }
                 .register(registry)
             timer.record(System.nanoTime() - start, TimeUnit.NANOSECONDS)
+        }
+    }
+
+    companion object {
+        private fun logAtLevel(logger: Logger, level: String, format: String, vararg args: Any?) {
+            when (level.uppercase()) {
+                "TRACE" -> logger.trace(format, *args)
+                "INFO" -> logger.info(format, *args)
+                "WARN" -> logger.warn(format, *args)
+                else -> logger.debug(format, *args)
+            }
         }
     }
 }

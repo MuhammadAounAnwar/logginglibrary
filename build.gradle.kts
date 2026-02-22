@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "com.github.MuhammadAounAnwar"
-version = "1.0.5"
+version = "1.0.6"
 description = "Logging auto-configuration library for Kotlin Spring Boot"
 
 java {
@@ -38,6 +38,10 @@ dependencies {
     // ===== WebFlux =====
     compileOnly("org.springframework.boot:spring-boot-starter-webflux")
 
+    // ===== Servlet/MVC (for Servlet exception handler and correlation filter) =====
+    compileOnly("org.springframework.boot:spring-boot-starter-web")
+    compileOnly("jakarta.servlet:jakarta.servlet-api")
+
     // ===== R2DBC =====
     compileOnly("org.springframework.boot:spring-boot-starter-data-r2dbc")
 
@@ -48,11 +52,12 @@ dependencies {
     // ===== Micrometer =====
     compileOnly("io.micrometer:micrometer-core")
 
-    // ===== Logbook =====
+    // ===== Logbook (compileOnly — consumers must add logbook themselves when they want HTTP logging) =====
     val logbookVersion = "3.9.0"
-    api("org.zalando:logbook-core:$logbookVersion")
-    api("org.zalando:logbook-json:$logbookVersion")
-    api("org.zalando:logbook-spring-webflux:$logbookVersion")
+    compileOnly("org.zalando:logbook-core:$logbookVersion")
+    compileOnly("org.zalando:logbook-json:$logbookVersion")
+    compileOnly("org.zalando:logbook-spring-webflux:$logbookVersion")
+    compileOnly("org.zalando:logbook-spring-boot-starter:$logbookVersion")
 
     // ===== Logging =====
     api("org.slf4j:slf4j-api:2.0.12")
@@ -60,6 +65,7 @@ dependencies {
     // ===== Testing =====
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.boot:spring-boot-starter-webflux")
+    testImplementation("org.springframework.boot:spring-boot-starter-web")
     testImplementation(kotlin("test"))
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
