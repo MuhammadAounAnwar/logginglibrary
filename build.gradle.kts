@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "com.github.MuhammadAounAnwar"
-version = "1.0.6"
+version = "1.0.8"
 description = "Logging auto-configuration library for Kotlin Spring Boot"
 
 java {
@@ -38,6 +38,9 @@ dependencies {
     // ===== WebFlux =====
     compileOnly("org.springframework.boot:spring-boot-starter-webflux")
 
+    // ===== Spring Security (compileOnly — for AccessDeniedException/AuthenticationException in exception handlers) =====
+    compileOnly("org.springframework.boot:spring-boot-starter-security")
+
     // ===== Servlet/MVC (for Servlet exception handler and correlation filter) =====
     compileOnly("org.springframework.boot:spring-boot-starter-web")
     compileOnly("jakarta.servlet:jakarta.servlet-api")
@@ -66,6 +69,7 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.boot:spring-boot-starter-webflux")
     testImplementation("org.springframework.boot:spring-boot-starter-web")
+    testImplementation("io.projectreactor:reactor-test")
     testImplementation(kotlin("test"))
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }

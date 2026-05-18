@@ -12,6 +12,8 @@ import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.server.ResponseStatusException
+import org.springframework.web.server.ServerWebInputException
 import reactor.core.publisher.Mono
 
 class DefaultGlobalExceptionHandlerTest {
@@ -121,5 +123,51 @@ class DefaultGlobalExceptionHandlerTest {
         @GetMapping("/test/error")
         fun error(): Mono<String> =
             Mono.error(RuntimeException("unexpected failure"))
+
+        @GetMapping("/test/bad-input")
+        fun badInput(): Mono<String> =
+            Mono.error(ServerWebInputException("type mismatch on field 'type'"))
+
+        @GetMapping("/test/gone")
+        fun gone(): Mono<String> =
+            Mono.error(ResponseStatusException(HttpStatus.GONE, "resource expired"))
+
+        @GetMapping("/test/method-not-allowed")
+        fun methodNotAllowed(): Mono<String> =
+            Mono.error(ResponseStatusException(HttpStatus.METHOD_NOT_ALLOWED, "POST not allowed here"))
+    }
+
+    @Test
+    fun `ServerWebInputException returns 400 with embedded status`() {
+        webTestClient.get().uri("/test/bad-input")
+            .exchange()
+            .expectStatus().isBadRequest
+            .expectBody(ErrorResponse::class.java)
+            .value { body ->
+                assert(body.status == 400) { "Expected 400 but got ${body.status}" }
+            }
+    }
+
+    @Test
+    fun `ResponseStatusException with 410 Gone returns 410`() {
+        webTestClient.get().uri("/test/gone")
+            .exchange()
+            .expectStatus().isEqualTo(HttpStatus.GONE)
+            .expectBody(ErrorResponse::class.java)
+            .value { body ->
+                assert(body.status == 410) { "Expected 410 but got ${body.status}" }
+                assert(body.message?.contains("resource expired") == true)
+            }
+    }
+
+    @Test
+    fun `ResponseStatusException with 405 returns 405 not 500`() {
+        webTestClient.get().uri("/test/method-not-allowed")
+            .exchange()
+            .expectStatus().isEqualTo(HttpStatus.METHOD_NOT_ALLOWED)
+            .expectBody(ErrorResponse::class.java)
+            .value { body ->
+                assert(body.status == 405) { "Expected 405 but got ${body.status}" }
+            }
     }
 }

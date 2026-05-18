@@ -6,9 +6,12 @@ import com.ono.logginglibrary.core.exception.OnoBusinessException
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
+import org.springframework.http.converter.HttpMessageNotReadableException
+import org.springframework.mock.http.MockHttpInputMessage
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
+import org.springframework.web.bind.MissingServletRequestParameterException
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RestController
@@ -37,6 +40,14 @@ class DefaultServletExceptionHandlerTest {
 
         @GetMapping("/test/error")
         fun error(): String = throw RuntimeException("unexpected failure")
+
+        @GetMapping("/test/not-readable")
+        fun notReadable(): String =
+            throw HttpMessageNotReadableException("bad JSON body", MockHttpInputMessage("{}".toByteArray()))
+
+        @GetMapping("/test/missing-param")
+        fun missingParam(): String =
+            throw MissingServletRequestParameterException("userId", "String")
     }
 
     private val mockMvc: MockMvc = MockMvcBuilders.standaloneSetup(TestController())
@@ -81,6 +92,26 @@ class DefaultServletExceptionHandlerTest {
             .andExpect {
                 jsonPath("$.path") { value("/test/bad") }
                 jsonPath("$.timestamp") { exists() }
+            }
+    }
+
+    @Test
+    fun `HttpMessageNotReadableException returns 400`() {
+        mockMvc.get("/test/not-readable")
+            .andExpect {
+                status { isBadRequest() }
+                jsonPath("$.status") { value(400) }
+                jsonPath("$.message") { value("Malformed request body") }
+            }
+    }
+
+    @Test
+    fun `MissingServletRequestParameterException returns 400 with parameter name`() {
+        mockMvc.get("/test/missing-param")
+            .andExpect {
+                status { isBadRequest() }
+                jsonPath("$.status") { value(400) }
+                jsonPath("$.message") { value("Missing required parameter: userId") }
             }
     }
 }

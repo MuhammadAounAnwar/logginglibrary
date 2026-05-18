@@ -43,7 +43,7 @@ class ObservabilityAspect(
         if (joinPoint.isSkipLogging()) return joinPoint.proceed()
 
         val methodName = joinPoint.signature.name
-        val start = System.currentTimeMillis()
+        val startNs = System.nanoTime()
 
         if (logExecution.logArguments && joinPoint.args.isNotEmpty()) {
             logAtLevel(log, logExecution.level, "[{}] called with args: {}", methodName, joinPoint.args)
@@ -53,13 +53,13 @@ class ObservabilityAspect(
             when (val result = joinPoint.proceed()) {
                 is Mono<*> -> result
                     .doOnSuccess { value ->
-                        logCompletion(methodName, System.currentTimeMillis() - start, logExecution.level)
+                        logCompletion(methodName, elapsedMs(startNs), logExecution.level)
                         if (logExecution.logResult && value != null) {
                             logAtLevel(log, logExecution.level, "[{}] result: {}", methodName, value)
                         }
                     }
                     .doOnError { ex ->
-                        log.warn("[{}] failed after {}ms", methodName, System.currentTimeMillis() - start, ex)
+                        log.warn("[{}] failed after {}ms", methodName, elapsedMs(startNs), ex)
                     }
 
                 is Flux<*> -> result
@@ -69,14 +69,14 @@ class ObservabilityAspect(
                         }
                     }
                     .doOnComplete {
-                        logCompletion(methodName, System.currentTimeMillis() - start, logExecution.level)
+                        logCompletion(methodName, elapsedMs(startNs), logExecution.level)
                     }
                     .doOnError { ex ->
-                        log.warn("[{}] failed after {}ms", methodName, System.currentTimeMillis() - start, ex)
+                        log.warn("[{}] failed after {}ms", methodName, elapsedMs(startNs), ex)
                     }
 
                 else -> {
-                    logCompletion(methodName, System.currentTimeMillis() - start, logExecution.level)
+                    logCompletion(methodName, elapsedMs(startNs), logExecution.level)
                     if (logExecution.logResult) {
                         logAtLevel(log, logExecution.level, "[{}] result: {}", methodName, result)
                     }
@@ -84,7 +84,7 @@ class ObservabilityAspect(
                 }
             }
         } catch (e: Throwable) {
-            log.warn("[{}] failed after {}ms", methodName, System.currentTimeMillis() - start, e)
+            log.warn("[{}] failed after {}ms", methodName, elapsedMs(startNs), e)
             throw e
         }
     }
@@ -136,11 +136,15 @@ class ObservabilityAspect(
     }
 
     companion object {
+        private fun elapsedMs(startNs: Long): Long = (System.nanoTime() - startNs) / 1_000_000L
+
         private fun logAtLevel(logger: Logger, level: String, format: String, vararg args: Any?) {
             when (level.uppercase()) {
                 "TRACE" -> logger.trace(format, *args)
+                "DEBUG" -> logger.debug(format, *args)
                 "INFO" -> logger.info(format, *args)
                 "WARN" -> logger.warn(format, *args)
+                "ERROR" -> logger.error(format, *args)
                 else -> logger.debug(format, *args)
             }
         }
