@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "com.github.MuhammadAounAnwar"
-version = "1.0.9"
+version = "1.0.10"
 description = "Logging auto-configuration library for Kotlin Spring Boot"
 
 java {
@@ -64,6 +64,11 @@ dependencies {
 
     // ===== Logging =====
     api("org.slf4j:slf4j-api:2.0.12")
+
+    // ===== Loki log shipping (compileOnly — consumers must add loki-logback-appender
+    // themselves to activate the LOKI appender in logback-spring.xml below; 1.6.0 is the
+    // last line compatible with Logback 1.4.x, which is what Spring Boot 3.2.x ships) =====
+    compileOnly("com.github.loki4j:loki-logback-appender:1.6.0")
 
     // ===== Testing =====
     testImplementation("org.springframework.boot:spring-boot-starter-test")

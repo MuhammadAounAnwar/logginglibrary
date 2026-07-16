@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <!-- Shared default logging config for every logginglibrary consumer. Spring Boot only
+         auto-loads a single logback-spring.xml from the whole classpath, so as long as no
+         consuming service defines its own, this one applies automatically. A consumer that
+         needs a different setup can simply add its own src/main/resources/logback-spring.xml,
+         which will take precedence. -->
+
+    <springProperty scope="context" name="appName" source="spring.application.name" defaultValue="unknown-service"/>
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [${appName}] [%X{correlationId}] %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- LOKI is only wired in when the consumer adds com.github.loki4j:loki-logback-appender
+         at runtime (logginglibrary declares it compileOnly, same pattern as every other
+         optional feature in this library) — otherwise Logback logs a status warning about the
+         missing appender class and continues with CONSOLE only, it does not fail startup. -->
+    <appender name="LOKI" class="com.github.loki4j.logback.Loki4jAppender">
+        <http>
+            <url>${LOKI_URL:-http://localhost:3100/loki/api/v1/push}</url>
+        </http>
+        <format>
+            <label>
+                <pattern>app=${appName},level=%level</pattern>
+                <structuredMetadataPattern>correlationId=%X{correlationId},traceId=%X{traceId},spanId=%X{spanId}</structuredMetadataPattern>
+            </label>
+            <message>
+                <pattern>[%thread] %logger{36} - %msg%n</pattern>
+            </message>
+        </format>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="LOKI"/>
+    </root>
+
+</configuration>
