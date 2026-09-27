@@ -42,3 +42,13 @@ out/
 ### macOS ###
 **/.DS_Store
 .DS_Store
+
+# local tooling / build output
+.claude/
+CLAUDE.md
+graphify-out/
+.gradle/
+build/
+.idea/
+*.iml
+.DS_Store
