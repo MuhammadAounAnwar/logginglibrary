@@ -39,6 +39,11 @@ import org.springframework.web.server.WebFilterChain
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.REACTIVE)
 class CorrelationWebFilterConfig {
 
+    init {
+        // Only when context-propagation is on the classpath (it is for every reactive service that enables the Reactor hook).
+        if (runCatching { Class.forName("io.micrometer.context.ContextRegistry") }.isSuccess) CorrelationContextPropagation.register()
+    }
+
     @Bean
     @ConditionalOnMissingBean
     fun correlationIdGenerator(): CorrelationIdGenerator = CorrelationIdGenerator.DEFAULT
