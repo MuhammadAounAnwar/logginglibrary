@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "com.github.MuhammadAounAnwar"
-version = "1.0.10"
+version = "1.0.11"
 description = "Logging auto-configuration library for Kotlin Spring Boot"
 
 java {
@@ -55,6 +55,11 @@ dependencies {
     // ===== Micrometer =====
     compileOnly("io.micrometer:micrometer-core")
 
+    // ===== Messaging and clients the correlation id travels through (compileOnly: a consumer gets the hook only when it has the class) =====
+    compileOnly("org.springframework.kafka:spring-kafka")
+    compileOnly("org.springframework.boot:spring-boot-starter-amqp")
+    compileOnly("com.zaxxer:HikariCP")
+
     // ===== Logbook (compileOnly — consumers must add logbook themselves when they want HTTP logging) =====
     val logbookVersion = "3.9.0"
     compileOnly("org.zalando:logbook-core:$logbookVersion")
@@ -76,6 +81,10 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-web")
     // The exception handlers reference Spring Security types (compileOnly above); the tests need them on the classpath.
     testImplementation("org.springframework.boot:spring-boot-starter-security")
+    testImplementation("org.springframework.kafka:spring-kafka")
+    testImplementation("org.springframework.boot:spring-boot-starter-amqp")
+    testImplementation("org.springframework:spring-jdbc")
+    testImplementation("com.zaxxer:HikariCP")
     testImplementation("io.projectreactor:reactor-test")
     testImplementation(kotlin("test"))
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")

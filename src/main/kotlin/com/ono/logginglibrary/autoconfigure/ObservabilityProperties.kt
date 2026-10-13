@@ -10,7 +10,8 @@ data class ObservabilityProperties(
     var logging: Logging = Logging(),
     var metrics: Metrics = Metrics(),
     var aop: Aop = Aop(),
-    var exceptions: Exceptions = Exceptions()
+    var exceptions: Exceptions = Exceptions(),
+    var correlation: Correlation = Correlation()
 
 ) {
 
@@ -27,6 +28,11 @@ data class ObservabilityProperties(
     data class Aop(
         var enabled: Boolean = true,
         var slowThresholdMs: Long = 500
+    )
+
+    data class Correlation(
+        /** Set `app.correlation_id` on PostgreSQL connections so the replication outbox trigger can record it. Off by default. */
+        var databaseSession: Boolean = false
     )
 
     data class Exceptions(
