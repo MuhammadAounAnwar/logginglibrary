@@ -1,5 +1,7 @@
 package com.ono.logginglibrary.autoconfigure.correlation
 
+import com.ono.logginglibrary.core.correlation.CorrelationIds
+import org.springframework.core.env.Environment
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.config.BeanPostProcessor
 import org.springframework.boot.autoconfigure.AutoConfiguration
@@ -31,8 +33,8 @@ class CorrelationPropagationAutoConfiguration {
     class RestTemplateConfig {
         @Bean
         @ConditionalOnMissingBean(name = ["correlationRestTemplateCustomizer"])
-        fun correlationRestTemplateCustomizer(): RestTemplateCustomizer =
-            RestTemplateCustomizer { it.interceptors.add(CorrelationClientHttpRequestInterceptor()) }
+        fun correlationRestTemplateCustomizer(environment: Environment): RestTemplateCustomizer =
+            RestTemplateCustomizer { it.interceptors.add(CorrelationClientHttpRequestInterceptor(headerOf(environment))) }
     }
 
     @Configuration(proxyBeanMethods = false)
@@ -40,8 +42,8 @@ class CorrelationPropagationAutoConfiguration {
     class RestClientConfig {
         @Bean
         @ConditionalOnMissingBean(name = ["correlationRestClientCustomizer"])
-        fun correlationRestClientCustomizer(): RestClientCustomizer =
-            RestClientCustomizer { it.requestInterceptor(CorrelationClientHttpRequestInterceptor()) }
+        fun correlationRestClientCustomizer(environment: Environment): RestClientCustomizer =
+            RestClientCustomizer { it.requestInterceptor(CorrelationClientHttpRequestInterceptor(headerOf(environment))) }
     }
 
     @Configuration(proxyBeanMethods = false)
@@ -49,8 +51,8 @@ class CorrelationPropagationAutoConfiguration {
     class WebClientConfig {
         @Bean
         @ConditionalOnMissingBean(name = ["correlationWebClientCustomizer"])
-        fun correlationWebClientCustomizer(): WebClientCustomizer =
-            WebClientCustomizer { it.filter(CorrelationExchangeFilterFunction()) }
+        fun correlationWebClientCustomizer(environment: Environment): WebClientCustomizer =
+            WebClientCustomizer { it.filter(CorrelationExchangeFilterFunction(headerOf(environment))) }
     }
 
     @Configuration(proxyBeanMethods = false)
@@ -66,13 +68,13 @@ class CorrelationPropagationAutoConfiguration {
     class RabbitConfig {
         @Bean
         @ConditionalOnMissingBean(name = ["correlationRabbitTemplateCustomizer"])
-        fun correlationRabbitTemplateCustomizer(): RabbitTemplateCustomizer =
-            RabbitTemplateCustomizer { it.addBeforePublishPostProcessors(CorrelationMessagePostProcessor()) }
+        fun correlationRabbitTemplateCustomizer(environment: Environment): RabbitTemplateCustomizer =
+            RabbitTemplateCustomizer { it.addBeforePublishPostProcessors(CorrelationMessagePostProcessor(headerOf(environment))) }
 
         @Bean
         @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
-        fun correlationRabbitFactoryPostProcessor(): BeanPostProcessor =
-            CorrelationRabbitFactoryPostProcessor(CorrelationRabbitListenerAdvice())
+        fun correlationRabbitFactoryPostProcessor(environment: Environment): BeanPostProcessor =
+            CorrelationRabbitFactoryPostProcessor(CorrelationRabbitListenerAdvice(headerOf(environment)))
     }
 
     @Configuration(proxyBeanMethods = false)
@@ -80,7 +82,7 @@ class CorrelationPropagationAutoConfiguration {
     class KafkaConfig {
         @Bean
         @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
-        fun correlationKafkaPostProcessor(): BeanPostProcessor = CorrelationKafkaPostProcessor()
+        fun correlationKafkaPostProcessor(environment: Environment): BeanPostProcessor = CorrelationKafkaPostProcessor(headerOf(environment))
     }
 
     @Configuration(proxyBeanMethods = false)
@@ -90,5 +92,10 @@ class CorrelationPropagationAutoConfiguration {
         @Bean
         @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
         fun correlationDataSourcePostProcessor(): BeanPostProcessor = CorrelationDataSourcePostProcessor()
+    }
+
+    private companion object {
+        fun headerOf(environment: Environment): String =
+            environment.getProperty("ono.observability.logging.correlation-header", CorrelationIds.HEADER)
     }
 }

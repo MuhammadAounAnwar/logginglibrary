@@ -61,7 +61,7 @@ class CorrelationRecordInterceptor<K, V>(
 }
 
 /** Gives every `KafkaTemplate` the producer interceptor and every `@KafkaListener` container factory the record interceptor. */
-class CorrelationKafkaPostProcessor : BeanPostProcessor {
+class CorrelationKafkaPostProcessor(private val header: String = CorrelationIds.HEADER) : BeanPostProcessor {
     // The setters hold a single interceptor and have no getter, so an interceptor the service set itself is read from the field
     // and kept: ours runs first, the service's after it.
     @Suppress("UNCHECKED_CAST")
@@ -69,14 +69,14 @@ class CorrelationKafkaPostProcessor : BeanPostProcessor {
         when (bean) {
             is KafkaTemplate<*, *> -> {
                 val own = existing(bean, "producerInterceptor") as ProducerInterceptor<Any, Any>?
-                val ours = CorrelationProducerInterceptor<Any, Any>()
+                val ours = CorrelationProducerInterceptor<Any, Any>(header)
                 (bean as KafkaTemplate<Any, Any>).setProducerInterceptor(
                     if (own == null || own is CorrelationProducerInterceptor<*, *>) ours else CompositeProducerInterceptor(ours, own),
                 )
             }
             is AbstractKafkaListenerContainerFactory<*, *, *> -> {
                 val own = existing(bean, "recordInterceptor") as RecordInterceptor<Any, Any>?
-                val ours = CorrelationRecordInterceptor<Any, Any>()
+                val ours = CorrelationRecordInterceptor<Any, Any>(header)
                 (bean as AbstractKafkaListenerContainerFactory<*, Any, Any>).setRecordInterceptor(
                     if (own == null || own is CorrelationRecordInterceptor<*, *>) ours else CompositeRecordInterceptor(ours, own),
                 )
