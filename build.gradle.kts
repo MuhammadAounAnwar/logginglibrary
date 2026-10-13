@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "com.github.MuhammadAounAnwar"
-version = "1.0.11"
+version = "1.0.12"
 description = "Logging auto-configuration library for Kotlin Spring Boot"
 
 java {
@@ -54,6 +54,7 @@ dependencies {
 
     // ===== Micrometer =====
     compileOnly("io.micrometer:micrometer-core")
+    compileOnly("io.micrometer:context-propagation:1.1.1")
 
     // ===== Messaging and clients the correlation id travels through (compileOnly: a consumer gets the hook only when it has the class) =====
     compileOnly("org.springframework.kafka:spring-kafka")
@@ -84,6 +85,7 @@ dependencies {
     testImplementation("org.springframework.kafka:spring-kafka")
     testImplementation("org.springframework.boot:spring-boot-starter-amqp")
     testImplementation("org.springframework:spring-jdbc")
+    testImplementation("io.micrometer:context-propagation:1.1.1")
     testImplementation("org.testcontainers:junit-jupiter")
     testImplementation("org.testcontainers:rabbitmq")
     testImplementation("org.testcontainers:kafka")

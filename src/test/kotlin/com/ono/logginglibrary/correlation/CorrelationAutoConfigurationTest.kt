@@ -68,4 +68,15 @@ class CorrelationAutoConfigurationTest {
             assertThat(names).contains("CorrelationKafkaPostProcessor", "CorrelationRabbitFactoryPostProcessor")
         }
     }
+
+    @Test
+    fun `a configured header name is used by the outgoing hooks`() {
+        runner.withPropertyValues("ono.observability.logging.correlation-header=X-Trace-Key").run { ctx ->
+            val template = org.springframework.web.client.RestTemplate()
+            ctx.getBean(RestTemplateCustomizer::class.java).customize(template)
+            val interceptor = template.interceptors.filterIsInstance<com.ono.logginglibrary.autoconfigure.correlation.CorrelationClientHttpRequestInterceptor>().single()
+            val header = org.springframework.test.util.ReflectionTestUtils.getField(interceptor, "header")
+            assertThat(header).isEqualTo("X-Trace-Key")
+        }
+    }
 }
