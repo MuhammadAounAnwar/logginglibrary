@@ -74,6 +74,8 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.boot:spring-boot-starter-webflux")
     testImplementation("org.springframework.boot:spring-boot-starter-web")
+    // The exception handlers reference Spring Security types (compileOnly above); the tests need them on the classpath.
+    testImplementation("org.springframework.boot:spring-boot-starter-security")
     testImplementation("io.projectreactor:reactor-test")
     testImplementation(kotlin("test"))
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")

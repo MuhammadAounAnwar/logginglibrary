@@ -1,5 +1,6 @@
 package com.ono.logginglibrary.autoconfigure.exception
 
+import com.ono.logginglibrary.autoconfigure.web.correlationId
 import com.ono.logginglibrary.core.ObservabilityConstants
 import com.ono.logginglibrary.core.exception.ErrorResponse
 import com.ono.logginglibrary.core.exception.OnoBusinessException
@@ -123,7 +124,7 @@ class DefaultGlobalExceptionHandler(
             error = status.reasonPhrase,
             message = message,
             path = exchange.request.uri.path,
-            correlationId = exchange.request.headers.getFirst(correlationHeader),
+            correlationId = exchange.correlationId,
             timestamp = Instant.now()
         )
         return Mono.just(ResponseEntity.status(status).body(body))

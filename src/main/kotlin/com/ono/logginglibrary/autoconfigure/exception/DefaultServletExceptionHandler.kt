@@ -1,5 +1,6 @@
 package com.ono.logginglibrary.autoconfigure.exception
 
+import com.ono.logginglibrary.autoconfigure.web.correlationId
 import com.ono.logginglibrary.core.ObservabilityConstants
 import com.ono.logginglibrary.core.exception.ErrorResponse
 import com.ono.logginglibrary.core.exception.OnoBusinessException
@@ -146,7 +147,7 @@ class DefaultServletExceptionHandler(
             error = status.reasonPhrase,
             message = message,
             path = request.requestURI,
-            correlationId = request.getHeader(correlationHeader),
+            correlationId = request.correlationId,
             timestamp = Instant.now()
         )
         return ResponseEntity.status(status).body(body)

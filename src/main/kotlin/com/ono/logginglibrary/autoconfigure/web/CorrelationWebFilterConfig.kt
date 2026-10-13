@@ -1,6 +1,7 @@
 package com.ono.logginglibrary.autoconfigure.web
 
 import com.ono.logginglibrary.autoconfigure.ObservabilityProperties
+import com.ono.logginglibrary.core.correlation.CorrelationIds
 import com.ono.logginglibrary.core.mdc.CorrelationIdGenerator
 import com.ono.logginglibrary.core.mdc.MdcKeys
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass
@@ -58,11 +59,16 @@ class CorrelationWebFilterConfig {
 
             val headerName = properties.logging.correlationHeader
 
-            val correlationId =
-                exchange.request.headers.getFirst(headerName)
-                    ?: generator.generate()
+            // A valid id from the caller is kept; the alternate header X-Request-ID is read when the canonical one is absent.
+            val correlationId = CorrelationIds.resolve(
+                exchange.request.headers.getFirst(headerName),
+                exchange.request.headers.getFirst(CorrelationIds.ALT_HEADER),
+                generator::generate
+            )
 
-            exchange.response.headers.add(headerName, correlationId)
+            // The exchange attribute is what the error handlers read: it does not depend on MDC propagation.
+            exchange.attributes[CorrelationIds.ATTRIBUTE] = correlationId
+            exchange.response.headers.set(headerName, correlationId)
 
             chain.filter(exchange)
                 .contextWrite { ctx ->
