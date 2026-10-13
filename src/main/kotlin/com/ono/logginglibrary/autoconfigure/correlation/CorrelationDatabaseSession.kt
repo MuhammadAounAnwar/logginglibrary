@@ -1,5 +1,6 @@
 package com.ono.logginglibrary.autoconfigure.correlation
 
+import org.springframework.jdbc.datasource.lookup.AbstractRoutingDataSource
 import com.ono.logginglibrary.core.correlation.CorrelationIds
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.config.BeanPostProcessor
@@ -35,6 +36,9 @@ class CorrelationAwareDataSource(delegate: DataSource) : DelegatingDataSource(de
         try {
             if (postgres == null) postgres = connection.metaData.databaseProductName.equals("PostgreSQL", ignoreCase = true)
             if (postgres != true) return connection
+            // Inside a transaction the label is undone by a rollback and a failed statement would abort the transaction,
+            // so a connection with auto-commit off is left alone (the services use the pool default, auto-commit on).
+            if (!connection.autoCommit) return connection
             val physical = runCatching { connection.unwrap(Connection::class.java) }.getOrDefault(connection)
             val wanted = CorrelationIds.current().orEmpty()
             if (lastSet[physical] == wanted || (wanted.isEmpty() && lastSet[physical] == null)) return connection
@@ -51,8 +55,8 @@ class CorrelationAwareDataSource(delegate: DataSource) : DelegatingDataSource(de
     }
 }
 
-/** Wraps every [DataSource] bean in a [CorrelationAwareDataSource] (once). */
+/** Wraps every [DataSource] bean except routing ones in a [CorrelationAwareDataSource] (once); the bean's type becomes the wrapper. */
 class CorrelationDataSourcePostProcessor : BeanPostProcessor {
     override fun postProcessAfterInitialization(bean: Any, beanName: String): Any =
-        if (bean is DataSource && bean !is CorrelationAwareDataSource) CorrelationAwareDataSource(bean) else bean
+        if (bean is DataSource && bean !is CorrelationAwareDataSource && bean !is AbstractRoutingDataSource) CorrelationAwareDataSource(bean) else bean
 }

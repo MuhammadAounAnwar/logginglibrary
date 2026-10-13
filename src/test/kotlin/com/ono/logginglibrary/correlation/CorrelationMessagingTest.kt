@@ -170,6 +170,7 @@ class CorrelationMessagingTest {
             val meta = mock(DatabaseMetaData::class.java)
             `when`(meta.databaseProductName).thenReturn(product)
             `when`(connection.metaData).thenReturn(meta)
+            `when`(connection.autoCommit).thenReturn(true)
             `when`(connection.unwrap(Connection::class.java)).thenReturn(connection)
             `when`(connection.prepareStatement("SELECT set_config('app.correlation_id', ?, false)")).thenReturn(statement)
             `when`(dataSource.connection).thenReturn(connection)
@@ -209,6 +210,30 @@ class CorrelationMessagingTest {
         val f = Fixture("PostgreSQL")
         CorrelationAwareDataSource(f.dataSource).connection
         verify(f.connection, never()).prepareStatement("SELECT set_config('app.correlation_id', ?, false)")
+    }
+
+    @Test
+    fun `a connection inside a transaction is left alone`() {
+        val f = Fixture("PostgreSQL")
+        `when`(f.connection.autoCommit).thenReturn(false)
+        MDC.put(CorrelationIds.MDC_KEY, "request-0001")
+        CorrelationAwareDataSource(f.dataSource).connection
+        verify(f.connection, never()).prepareStatement("SELECT set_config('app.correlation_id', ?, false)")
+    }
+
+    @Test
+    fun `a service's own Kafka interceptors are kept, ours runs first`() {
+        val factory = org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory<String, String>()
+        var ran = false
+        factory.setRecordInterceptor(org.springframework.kafka.listener.RecordInterceptor<String, String> { r, _ -> ran = true; r })
+        CorrelationKafkaPostProcessor().postProcessBeforeInitialization(factory, "f")
+        val interceptor = org.springframework.beans.DirectFieldAccessor(factory).getPropertyValue("recordInterceptor")
+        assertThat(interceptor).isInstanceOf(org.springframework.kafka.listener.CompositeRecordInterceptor::class.java)
+        @Suppress("UNCHECKED_CAST")
+        (interceptor as org.springframework.kafka.listener.RecordInterceptor<String, String>)
+            .intercept(record("from-record-01"), mock(org.apache.kafka.clients.consumer.Consumer::class.java) as org.apache.kafka.clients.consumer.Consumer<String, String>)
+        assertThat(ran).isTrue()
+        assertThat(MDC.get(CorrelationIds.MDC_KEY)).isEqualTo("from-record-01")
     }
 
     @Test

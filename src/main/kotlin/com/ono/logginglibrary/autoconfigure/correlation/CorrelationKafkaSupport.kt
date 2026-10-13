@@ -1,5 +1,8 @@
 package com.ono.logginglibrary.autoconfigure.correlation
 
+import org.springframework.beans.DirectFieldAccessor
+import org.springframework.kafka.listener.CompositeRecordInterceptor
+import org.springframework.kafka.support.CompositeProducerInterceptor
 import com.ono.logginglibrary.core.correlation.CorrelationIds
 import com.ono.logginglibrary.core.correlation.CorrelationPropagation
 import com.ono.logginglibrary.core.mdc.CorrelationIdGenerator
@@ -59,15 +62,31 @@ class CorrelationRecordInterceptor<K, V>(
 
 /** Gives every `KafkaTemplate` the producer interceptor and every `@KafkaListener` container factory the record interceptor. */
 class CorrelationKafkaPostProcessor : BeanPostProcessor {
+    // The setters hold a single interceptor and have no getter, so an interceptor the service set itself is read from the field
+    // and kept: ours runs first, the service's after it.
     @Suppress("UNCHECKED_CAST")
     override fun postProcessBeforeInitialization(bean: Any, beanName: String): Any {
         when (bean) {
-            is KafkaTemplate<*, *> -> (bean as KafkaTemplate<Any, Any>).setProducerInterceptor(CorrelationProducerInterceptor())
-            is AbstractKafkaListenerContainerFactory<*, *, *> ->
-                (bean as AbstractKafkaListenerContainerFactory<*, Any, Any>).setRecordInterceptor(CorrelationRecordInterceptor())
+            is KafkaTemplate<*, *> -> {
+                val own = existing(bean, "producerInterceptor") as ProducerInterceptor<Any, Any>?
+                val ours = CorrelationProducerInterceptor<Any, Any>()
+                (bean as KafkaTemplate<Any, Any>).setProducerInterceptor(
+                    if (own == null || own is CorrelationProducerInterceptor<*, *>) ours else CompositeProducerInterceptor(ours, own),
+                )
+            }
+            is AbstractKafkaListenerContainerFactory<*, *, *> -> {
+                val own = existing(bean, "recordInterceptor") as RecordInterceptor<Any, Any>?
+                val ours = CorrelationRecordInterceptor<Any, Any>()
+                (bean as AbstractKafkaListenerContainerFactory<*, Any, Any>).setRecordInterceptor(
+                    if (own == null || own is CorrelationRecordInterceptor<*, *>) ours else CompositeRecordInterceptor(ours, own),
+                )
+            }
         }
         return bean
     }
+
+    private fun existing(bean: Any, field: String): Any? =
+        runCatching { DirectFieldAccessor(bean).getPropertyValue(field) }.getOrNull()
 }
 
 /** Runs [block] with the record's correlation id as the thread's id; for code that handles a record outside a listener container. */
