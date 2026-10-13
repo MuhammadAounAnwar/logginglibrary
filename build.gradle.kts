@@ -87,6 +87,8 @@ dependencies {
     testImplementation("org.testcontainers:junit-jupiter")
     testImplementation("org.testcontainers:rabbitmq")
     testImplementation("org.testcontainers:kafka")
+    testImplementation("org.testcontainers:postgresql")
+    testImplementation("org.postgresql:postgresql")
     testImplementation("com.zaxxer:HikariCP")
     testImplementation("io.projectreactor:reactor-test")
     testImplementation(kotlin("test"))
