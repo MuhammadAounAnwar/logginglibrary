@@ -84,6 +84,9 @@ dependencies {
     testImplementation("org.springframework.kafka:spring-kafka")
     testImplementation("org.springframework.boot:spring-boot-starter-amqp")
     testImplementation("org.springframework:spring-jdbc")
+    testImplementation("org.testcontainers:junit-jupiter")
+    testImplementation("org.testcontainers:rabbitmq")
+    testImplementation("org.testcontainers:kafka")
     testImplementation("com.zaxxer:HikariCP")
     testImplementation("io.projectreactor:reactor-test")
     testImplementation(kotlin("test"))
@@ -108,3 +111,7 @@ publishing {
         }
     }
 }
+
+// Spring Boot 3.2.5 manages Testcontainers 1.19.7, whose docker-java client cannot negotiate the Docker Engine API of Docker 29;
+// 1.21.4 is the first release that does.
+ext["testcontainers.version"] = "1.21.4"
