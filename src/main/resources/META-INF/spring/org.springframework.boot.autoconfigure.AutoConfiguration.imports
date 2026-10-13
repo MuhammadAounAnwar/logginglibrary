@@ -2,3 +2,4 @@ com.ono.logginglibrary.autoconfigure.ObservabilityAutoConfiguration
 com.ono.logginglibrary.autoconfigure.exception.ExceptionAutoConfiguration
 com.ono.logginglibrary.autoconfigure.http.HttpLoggingAutoConfiguration
 com.ono.logginglibrary.autoconfigure.web.CorrelationServletFilterConfig
+com.ono.logginglibrary.autoconfigure.correlation.CorrelationPropagationAutoConfiguration

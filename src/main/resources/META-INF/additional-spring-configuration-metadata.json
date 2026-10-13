@@ -57,20 +57,42 @@
     {
       "name": "ono.observability.http.excludePaths",
       "type": "java.util.List<java.lang.String>",
-      "defaultValue": ["/actuator/**", "/health", "/health/**"],
+      "defaultValue": [
+        "/actuator/**",
+        "/health",
+        "/health/**"
+      ],
       "description": "URL path patterns excluded from HTTP logging."
     },
     {
       "name": "ono.observability.http.maskHeaders",
       "type": "java.util.List<java.lang.String>",
-      "defaultValue": ["Authorization", "X-API-Key", "Cookie", "Set-Cookie"],
+      "defaultValue": [
+        "Authorization",
+        "X-API-Key",
+        "Cookie",
+        "Set-Cookie"
+      ],
       "description": "HTTP header names whose values are masked in logs."
     },
     {
       "name": "ono.observability.http.maskBodyFields",
       "type": "java.util.List<java.lang.String>",
-      "defaultValue": ["password", "token", "secret", "apiKey", "accessToken", "refreshToken"],
+      "defaultValue": [
+        "password",
+        "token",
+        "secret",
+        "apiKey",
+        "accessToken",
+        "refreshToken"
+      ],
       "description": "JSON body field names whose values are masked in logs."
+    },
+    {
+      "name": "ono.observability.correlation.database-session",
+      "type": "java.lang.Boolean",
+      "defaultValue": false,
+      "description": "Tell PostgreSQL the current correlation id (set_config app.correlation_id) on every connection checked out, so database triggers such as the replication outbox can record it."
     }
   ]
 }

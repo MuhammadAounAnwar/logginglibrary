@@ -2,6 +2,7 @@ package com.ono.logginglibrary.web
 
 import com.ono.logginglibrary.autoconfigure.ObservabilityProperties
 import com.ono.logginglibrary.autoconfigure.web.CorrelationWebFilterConfig
+import com.ono.logginglibrary.core.correlation.CorrelationIds
 import com.ono.logginglibrary.core.mdc.CorrelationIdGenerator
 import com.ono.logginglibrary.core.mdc.MdcKeys
 import org.assertj.core.api.Assertions.assertThat
@@ -99,5 +100,35 @@ class CorrelationWebFilterTest {
         val id1 = exchange1.response.headers.getFirst(headerName)
         val id2 = exchange2.response.headers.getFirst(headerName)
         assertThat(id1).isNotEqualTo(id2)
+    }
+
+    @Test
+    fun `an invalid id from the caller is replaced`() {
+        val request = MockServerHttpRequest.get("/test").header(headerName, "bad id with spaces").build()
+        val exchange = MockServerWebExchange.from(request)
+
+        StepVerifier.create(buildFilter(CorrelationIdGenerator { "generated-0001" }).filter(exchange) { Mono.empty() }).verifyComplete()
+
+        assertThat(exchange.response.headers.getFirst(headerName)).isEqualTo("generated-0001")
+    }
+
+    @Test
+    fun `the alternate X-Request-ID header is used when the canonical one is absent`() {
+        val request = MockServerHttpRequest.get("/test").header("X-Request-ID", "from-gateway-0001").build()
+        val exchange = MockServerWebExchange.from(request)
+
+        StepVerifier.create(buildFilter().filter(exchange) { Mono.empty() }).verifyComplete()
+
+        assertThat(exchange.response.headers.getFirst(headerName)).isEqualTo("from-gateway-0001")
+    }
+
+    @Test
+    fun `the id is an exchange attribute and the response carries it once`() {
+        val exchange = MockServerWebExchange.from(MockServerHttpRequest.get("/test").build())
+
+        StepVerifier.create(buildFilter(CorrelationIdGenerator { "generated-0001" }).filter(exchange) { Mono.empty() }).verifyComplete()
+
+        assertThat(exchange.getAttribute<String>(CorrelationIds.ATTRIBUTE)).isEqualTo("generated-0001")
+        assertThat(exchange.response.headers[headerName]).containsExactly("generated-0001")
     }
 }
